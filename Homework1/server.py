@@ -24,8 +24,8 @@ def server(url):
     if '#' in url:
         path, anchor = url.split("#")
     if '?' in url:
-        path, query = filepath.split("?")
-    print(f"filepath: {path},  query: {query}, anchor: {anchor}")
+        path, query = path.split("?")
+    # print(f"filepath: {path},  query: {query}, anchor: {anchor}")
 
     # Take the path and find the respective file
     if path == "/" or path == "/main":
