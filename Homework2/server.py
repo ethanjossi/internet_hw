@@ -199,7 +199,10 @@ def server(url):
     # Listing Page
     elif filepath == "static/html/listings.html":
         query_params = parse_query_parameters(query)
-        # print(f"QUERY PARAMETERS: {query_params}")
+        # Check that category and query exist, if not, add them. 
+        if "category" not in query_params or "query" not in query_params:
+            query_params["category"] = "all"
+            query_params["query"] = ""
         # Set them to None if they are for any value
         if query_params["category"] == "all":
             query_params["category"] = None
