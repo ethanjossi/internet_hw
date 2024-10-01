@@ -7,11 +7,38 @@ with open("static/json/listings.json", "r") as file:
     listings = json.load(file)
 
 # PUT YOUR GLOBAL VARIABLES AND HELPER FUNCTIONS HERE.
+LISTING_PAGE = "listing_page.html"
+TABLE_TEMPLATE = """
+<tr class="listingEntry">
+    <td>
+        <a href="{URL}">{title}</a>
+    </td>
+    <td>{num_bids}</td>
+    <td>${top_bid}</td>
+    <td>{endDate}</td>
+</tr>"""
+BID_TEMPLATE = """
+<div class="bid">
+    <p><span class="bidder">{bidderName}: </span><span class="amount">{bidAmount}</span></p>
+    <p>Comments: {comment}</p>
+</div>"""
 # Dictionary to find page URLs
 filepaths = {
         "/": "static/html/mainpage.html",
         "/main": "static/html/mainpage.html",
-        "css": "static/css/main.css"
+        "css": "static/css/main.css",
+        "/gallery": "static/html/listings.html",
+        "/gallery/search": "static/html/listings.html",
+        "/listing/0": LISTING_PAGE,
+        "/listing/1": LISTING_PAGE,
+        "/listing/2": LISTING_PAGE,
+        "/listing/3": LISTING_PAGE,
+        "/images/main": "static/images/main.jpg",
+        "/images/0": "static/images/0.jpg",
+        "/images/1": "static/images/1.jpeg",
+        "/images/2": "static/images/2.jpeg",
+        "/images/3": "static/images/3.jpg",
+        "/main.css": "static/css/main.css"
     }
 
 def escape_html(str):
@@ -32,6 +59,8 @@ def unescape_url(url_str):
 
 
 def parse_query_parameters(response):
+    if response is None:
+        return {"category": "all", "query": ""}
     # If ? at beginning, remove it
     if response.startswith("?"):
         response = response[1:]
@@ -43,6 +72,8 @@ def parse_query_parameters(response):
     # Split the pair by '=' to separate key and value
     for pair in key_values:
         key, value = pair.split("=")
+        key = unescape_url(key)
+        value = unescape_url(value)
         query_dict[key] = value
     return query_dict
 
@@ -53,13 +84,34 @@ def render_listing(listing):
     description = listing["description"]
     category = listing["category"]
     endDate = listing["endDate"]
+    # Format all the bids
+    bids = ""
+    for bid in listing["bids"]:
+        bids += BID_TEMPLATE.format(bidderName=bid["bidderName"], bidAmount=typeset_dollars(bid["bidAmount"]), comment=bid["comment"])
+    if bids == "":
+        bids = "<p>Be the first to bid!</p>"
+    # Write the html
     with open("static/html/listing_page.html") as f:
         html = f.read()
-    html = html.format(title=title, imageURL=imageURL, description=description, category=category, endDate=endDate)
+    html = html.format(title=title, imageURL=imageURL, description=description, category=category, endDate=endDate, bids=bids)
     return html
 
-def render_gallery(query, category):
-    pass
+def render_gallery(query=None, category=None):
+    with open("static/html/listings.html") as f:
+        html = f.read()
+    # loop over the elements of listings
+    table_entries = ""
+    for entry in listings:
+        if ((query is None) or (query.lower() in entry.get("title").lower())) and ((category is None) or (category == entry.get("category"))):
+            # The entry meets the search parameters, add it to the table entries
+            url = "/listing/{num}".format(num=entry["id"])
+            table_entries += TABLE_TEMPLATE.format(URL=url, title=entry["title"], num_bids=len(entry["bids"]), top_bid=entry["bids"][1]["bidAmount"], endDate=entry["endDate"])
+    # Format the table entries into the listings page
+    if table_entries == "":
+        table_entries = "<p>No listings found</p>"
+    html = html.format(table_entries=table_entries)
+    return html
+
 
 
 # Provided function -- converts numbers like 42 or 7.347 to "$42.00" or "$7.35"
@@ -112,8 +164,8 @@ def get_filepath(path: str) -> str:
         str: the filepath for the server to fetch the html
     """
     global filepaths
-    filepath = str()
-    
+    filepath = filepaths.get(path, "static/html/404.html")
+    return filepath
 
 def server(url):
     # This gets both the path, anchor, and query in a small amount of code
@@ -126,22 +178,43 @@ def server(url):
         path, query = path.split("?")
     # print(f"filepath: {path},  query: {query}, anchor: {anchor}")
 
-    # Check the path and find the respective file
-    # Check or get the correct listing
-    if path.startswith("/listing/"):
+    filepath = get_filepath(path)
+    send_data = mime = ""
+    # Individual Listing
+    if filepath == LISTING_PAGE:
         number = path[9:]
-        if number.isdigit() and is_valid_id(int(number)): # Check if the listing id is valid
-            # Valid ID number, so render listing
-            html = render_listing(get_listing(int(number)))
-        else:
-            filepath = "static/html/404.html"
-    else:
-        global filepaths
-        filepath = filepaths.get(path, "static/html/404.html")
+        send_data = render_listing(get_listing(int(number)))
+        mime = "text/html"
+    # Images
+    elif filepath.startswith("static/images/"):
+        print(f"requesting image {filepath}")
+        with open(filepath, "rb") as img:
+            send_data = img.read()
+        mime = "image/jpeg"
+    # CSS
+    elif filepath.startswith("static/css"):
         with open(filepath) as file:
-            html = file.read()
-
-    return html, "text/html"
+            send_data = file.read()
+        mime = "text/css"
+    # Listing Page
+    elif filepath == "static/html/listings.html":
+        query_params = parse_query_parameters(query)
+        # print(f"QUERY PARAMETERS: {query_params}")
+        # Set them to None if they are for any value
+        if query_params["category"] == "all":
+            query_params["category"] = None
+        if query_params["query"] == "":
+            query_params["query"] = None
+        send_data = render_gallery(query=query_params["query"], category=query_params["category"])
+        mime = "text/html"
+    # All other pages
+    else:
+        with open(filepath) as file:
+            send_data = file.read()
+        mime = "text/html"
+    print(f"path: {path} filepath: {filepath}")
+    # ADD IN CHARSET
+    return send_data, mime
 
 
 # You shouldn't need to change content below this. It would be best if you just left it alone.

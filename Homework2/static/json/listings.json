@@ -1,7 +1,7 @@
 [
     {
         "title" : "Solid Oak Coffee Table",
-        "imageURL" : "",
+        "imageURL" : "/images/0",
         "description" : "a very sturdy coffee table handed down over generations",
         "category" : "average",
         "id" : 0,
@@ -9,24 +9,24 @@
         "bids" : [
             {
                 "bidderName" : "Anonymous",
-                "bidAmount" : "600",
+                "bidAmount" : 600,
                 "comment" : ""
             },
             {
                 "bidderName" : "Alice",
-                "bidAmount" : "590",
+                "bidAmount" : 590,
                 "comment" : "Can't wait to have this in my living room!"
             },
             {
                 "bidderName" : "Bob",
-                "bidAmount" : "580",
+                "bidAmount" : 580,
                 "comment" : ""
             }
         ]
     },
     {
         "title" : "24k Gold Wedding Ring",
-        "imageURL" : "",
+        "imageURL" : "/images/1",
         "description" : "A wonderful wedding ring thats been brand new handmade",
         "category" : "expensive",
         "id" : 1,
@@ -34,24 +34,24 @@
         "bids" : [
             {
                 "bidderName" : "Joe",
-                "bidAmount" : "3500",
+                "bidAmount" : 3500,
                 "comment" : "My wife will love this ring!"
             },
             {
                 "bidderName" : "Quincy",
-                "bidAmount" : "4000",
+                "bidAmount" : 4000,
                 "comment" : ""
             },
             {
                 "bidderName" : "Melissa",
-                "bidAmount" : "3000",
+                "bidAmount" : 3000,
                 "comment" : ""
             }
         ]
     },
     {
         "title" : "1997 Harley Davidson Motorcycle",
-        "imageURL" : "",
+        "imageURL" : "/images/2",
         "description" : "This motorcycle has 60,000 miles on it. Is on the older side but has been well taken care of",
         "category" : "expensive",
         "id" : 2,
@@ -59,24 +59,24 @@
         "bids" : [
             {
                 "bidderName" : "Anonymous",
-                "bidAmount" : "6000",
+                "bidAmount" : 6000,
                 "comment" : ""
             },
             {
                 "bidderName" : "Terry",
-                "bidAmount" : "4500",
+                "bidAmount" : 4500,
                 "comment" : "My husband and I have always wanted a motorcycle like this"
             },
             {
                 "bidderName" : "Chris",
-                "bidAmount" : "8500",
+                "bidAmount" : 8500,
                 "comment" : "No one better outbid me!!!"
             }
         ]
     },
     {
         "title" : "Typewriter",
-        "imageURL" : "",
+        "imageURL" : "/images/3",
         "description" : "Old mechanical device. Was originally used for writing letters at the post office.",
         "category" : "cheap",
         "id" : 3,
@@ -84,17 +84,17 @@
         "bids" : [
             {
                 "bidderName" : "MysteryPerson",
-                "bidAmount" : "200",
+                "bidAmount" : 200,
                 "comment" : "I've always wanted a typewriter..."
             },
             {
                 "bidderName" : "Someone",
-                "bidAmount" : "150",
+                "bidAmount" : 150,
                 "comment" : "No way!"
             },
             {
                 "bidderName" : "Chris",
-                "bidAmount" : "185",
+                "bidAmount" : 185,
                 "comment" : "Why would anyone want this"
             }
         ]
