@@ -1,0 +1,7 @@
+notes:
+- javascipt to create the listings table and bids table
+- will fetch the data from the listings.json file
+- first will fetch the whole json file, maybe later implement only part of json thats needed
+- Need to implement status codes
+- break up python into separate file that has helper functions?
+- 

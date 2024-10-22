@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Create a new listing</title>
+    <link rel="stylesheet" href="/main.css" type="text/css">
+</head>
+
+<body>
+    <!--Navigation Menu-->
+    <nav class="navbar">
+        <ul class="menu">
+            <li>
+                <a href="/">Main Page</a>
+            </li>
+            <li>
+                <a href="/gallery">Listings</a>
+            </li>
+            <li>
+                <a href="/create">Add Listing</a>
+            </li>
+        </ul>
+        <div class="search">
+            <form action="/gallery/search" method="GET">
+                <input type="text" name="query" id="query" placeholder="Search for listings">
+                <select name="category" id="category">
+                    <option value="all">All categories</option>
+                    <option value="cheap">Cheap</option>
+                    <option value="average">Average</option>
+                    <option value="expensive">Expensive</option>
+                </select>
+                <input type="submit" value="Search" class="searchButton">
+            </form>
+        </div>
+    </nav>
+
+    <!--Rest of body-->
+    <h1>Add a Listing</h1>
+    <div class="newListing">
+        <form>
+            <label for="title">Title:</label>
+            <input type="text" id="title">
+            <label for="imageURL">Image URL:</label>
+            <input type="url" id="imageURL"> 
+            <label for="description">Description:</label>
+            <textarea id="description"></textarea>
+            <label for="category">Category:</label>
+            <select name="category" id="category">
+                <option value="all">All categories</option>
+                <option value="cheap">Cheap</option>
+                <option value="average">Average</option>
+                <option value="expensive">Expensive</option>
+                <option value="other">Other</option>
+            </select>
+            <label for="newCategory">Please name the new category:</label>
+            <input type="text">
+            <label for="saleDate">Sale Date:</label>
+            <input type="date">
+            <input type="submit">
+        </form>
+    </div>
+</body>
+
+</html>
