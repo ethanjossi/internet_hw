@@ -1,5 +1,4 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
-import re
 import json
 
 # Load all the listings from the json file
