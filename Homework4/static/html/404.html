@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>404 Not Found</title>
+    <link rel="stylesheet" href="/main.css" type="text/css">
+</head>
+
+<body>
+    <!--Navigation Menu-->
+    <nav class="navbar">
+        <ul class="menu">
+            <li>
+                <a href="/">Main Page</a>
+            </li>
+            <li>
+                <a href="/gallery">Listings</a>
+            </li>
+            <li>
+                <a href="/create">Add Listing</a>
+            </li>
+        </ul>
+        <div class="search">
+            <form action="/gallery/search" method="GET">
+                <input type="text" name="query" id="query" placeholder="Search for listings">
+                <select name="category" id="category">
+                    <option value="all">All categories</option>
+                    <option value="cheap">Cheap</option>
+                    <option value="average">Average</option>
+                    <option value="expensive">Expensive</option>
+                </select>
+                <input type="submit" value="Search" class="searchButton">
+            </form>
+        </div>
+    </nav>
+    <h1>404 Page Not Found</h1>
+</body>
+
+</html>
