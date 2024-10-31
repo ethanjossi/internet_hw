@@ -172,11 +172,11 @@ thead {
 .gallery {
     display: flex;
     justify-content: center;
+    width: 60%;
 }
 
 .gallery table {
-    width: 80%;
-
+    width: 90%;
 }
 
 .listingEntry:nth-child(odd){
@@ -189,6 +189,23 @@ thead {
 
 .listingEntry td {
     font-weight: bold;
+}
+
+
+.galleryDiv {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: flex-start;
+}
+
+.preview {
+    width: 40%;
+    padding: 2em;
+}
+
+.preview img {
+    width: 100%;
 }
 
 /* Listing Page */
@@ -211,6 +228,47 @@ thead {
 .listingLeft img {
     width: 100%;
     border: 4px solid black;
+}
+
+.bidTitle {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+}
+
+.bidTitle button {
+    color: var(--black);
+    background-color: #2e67b8;
+    border-radius: 1em;
+    cursor: pointer;
+    width: 10em;
+    font-size: 1.5em;
+    font-weight: bold;
+}
+
+.newBid {
+    border: 2px solid black;
+    border-radius: 1.5em;
+    display: none;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    margin-top: 1em;
+    margin-bottom: 1em;
+    padding: 1em;
+    background-color: #2e67b8;
+}
+
+.newBid textarea {
+    width: 100%;
+    background-color: var(--black);
+}
+
+.newBid input {
+    background-color: var(--black);
+}
+
+#commentLabel {
+    width: 100%;
 }
 
 .description {
@@ -268,5 +326,9 @@ thead {
 }
 
 .newListing form textarea {
+    color: var(--black);
+}
+
+.newListing form select {
     color: var(--black);
 }

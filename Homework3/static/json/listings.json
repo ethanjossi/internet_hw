@@ -5,7 +5,7 @@
         "description" : "a very sturdy coffee table handed down over generations",
         "category" : "average",
         "id" : 0,
-        "endDate" : "10/01/2024",
+        "endDate" : "2024-11-22T14:00:00Z",
         "bids" : [
             {
                 "bidderName" : "Anonymous",
@@ -30,7 +30,7 @@
         "description" : "A wonderful wedding ring thats been brand new handmade",
         "category" : "expensive",
         "id" : 1,
-        "endDate" : "10/09/2024",
+        "endDate" : "2024-10-25T14:00:00Z",
         "bids" : [
             {
                 "bidderName" : "Joe",
@@ -55,7 +55,7 @@
         "description" : "This motorcycle has 60,000 miles on it. Is on the older side but has been well taken care of",
         "category" : "expensive",
         "id" : 2,
-        "endDate" : "10/15/2024",
+        "endDate" : "2024-10-27T14:00:00Z",
         "bids" : [
             {
                 "bidderName" : "Anonymous",
@@ -80,7 +80,7 @@
         "description" : "Old mechanical device. Was originally used for writing letters at the post office.",
         "category" : "cheap",
         "id" : 3,
-        "endDate" : "10/02/2024",
+        "endDate" : "2024-10-29T14:00:00Z",
         "bids" : [
             {
                 "bidderName" : "MysteryPerson",

@@ -37,19 +37,26 @@
     </nav>
     <h1>Gallery</h1>
     <!--Listings-->
-    <div class="gallery">
-        <table>
-            <thead>
-            <tr>
-                <th>Listing</th>
-                <th>Number of Bids</th>
-                <th>Top Bid</th>
-                <th>Auction Ends</th>
-            </tr>
-            </thead>
-            <tbody id="table_entries">
-            </tbody>
-        </table>
+    <div class="galleryDiv">
+        <div class="gallery">
+            <table>
+                <thead>
+                <tr>
+                    <th>Listing</th>
+                    <th>Number of Bids</th>
+                    <th>Top Bid</th>
+                    <th>Auction Ends</th>
+                </tr>
+                </thead>
+                <tbody>
+                    {table_entries}
+                </tbody>
+            </table>
+        </div>
+        <div class="preview">
+            <img id="imageURL" alt="preview image" hidden>
+            <p id="description" hidden></p>
+        </div>
     </div>
 </body>
 
