@@ -1,0 +1,14 @@
+nav 
+    ul(class="menu")
+        li: a(href="/") Main Page 
+        li: a(href="/gallery") Listings 
+        li: a(href="/create") Add Listing 
+    div(class="search")
+        form(action="/gallery/search", method="GET")
+            input#query(type="text", name="query", placeholder="Search for listings")
+            select#category(name="category")
+                option(value="all") All categories 
+                option(value="cheap") Cheap
+                option(value="average") Average 
+                option(value="expensive") Expensive
+            input(type="submit", value="Search", class="searchButton")

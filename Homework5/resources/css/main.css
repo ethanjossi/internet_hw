@@ -1,0 +1,339 @@
+@import url('https://fonts.googleapis.com/css2?family=Archivo+Black&display=swap');
+
+:root {
+    --light-gray: #b7c9e2;
+    --gray: #b3b4bd;
+    --blue: #0a21c0;
+    --dark-blue: #050a44;
+    --dark-gray: #2c2e3a;
+    --black: #141619;
+}
+
+.archivo-black-regular {
+    font-family: "Archivo Black", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+}
+  
+* {
+    margin: 0;
+    padding: 0;
+    font-family: sans-serif;
+    color: white;
+}
+
+p {
+    color: #ecf0f1;
+    margin: 2%;
+}
+
+body {
+    background-color: var(--light-gray);
+}
+
+h1 {
+    text-align: center;
+    color: var(--blue);
+    font-size: 3em;
+    padding-top: 50px;
+    font-family: "Archivo Black";
+}
+
+h2 {
+    text-align: center;
+    color: var(--blue);
+    font-size: 2em;
+    font-style: italic;
+}
+
+strong {
+    color: var(--blue);
+}
+
+em {
+    color: var(--blue)
+}
+
+a {
+    text-decoration: none;
+}
+
+th {
+    color: var(--blue);
+    font-size: 1.5em;
+}
+
+/* td {
+    border: 2px solid var(--dark-blue);
+    padding: 8px;
+} */
+
+thead {
+    background-color: white;
+}
+
+/* NAVBAR */
+.navbar {
+    background-color: var(--dark-gray);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: fixed;
+    width: 100%;
+}
+
+.navbar .menu {
+    display: flex;
+    list-style-type: none;
+    gap: 1em;
+}
+
+.navbar .menu li {
+    display: inline-block;
+    padding: 10px 5px;
+    
+}
+
+.navbar .menu li a {
+    text-decoration: none;
+    color: white;
+}
+
+.navbar .menu li:hover {
+    background-color: var(--blue);
+    border-radius: 5px;
+}
+
+.search {
+    padding: 10px 5px;
+}
+
+.search input {
+    color: var(--black)
+}
+
+.search form select {
+    color: var(--black);
+    border-radius: 2px;
+}
+
+.search form select:hover {
+    background-color: var(--blue);
+}
+
+.searchButton {
+    color: var(--black);
+    border-radius: 2px;
+}
+
+.searchButton:hover {
+    background-color: var(--blue);
+}
+
+/* MAINPAGE */
+.mainPageOutline {
+    display: flex;
+    gap: 2%;
+    justify-content: center;
+}
+
+.mainPageOutline .mainLeft {
+    background-color: var(--black);
+    border-radius: 3%;
+    width: 40%;
+}
+
+.mainPageOutline .mainRight {
+    background-color: var(--black);
+    border-radius: 3%;
+    width: 40%;
+}
+
+.imgDisplay {
+    display: block;
+    width: 96%;
+    margin: 2%;
+}
+
+.imgDisplay~figcaption {
+    display: block;
+    width: 96%;
+    margin: 2%;
+    color: white;
+}
+
+.mainPageOutline ul {
+    margin-top: 1em;
+    margin-bottom: 1em;
+    padding-left: 2.5em;
+}
+
+/* Gallery Page */
+.gallery {
+    display: flex;
+    justify-content: center;
+    width: 60%;
+}
+
+.gallery table {
+    width: 90%;
+}
+
+.listingEntry:nth-child(odd){
+    background-color: var(--blue);
+}
+
+.listingEntry:nth-child(even) {
+    background-color: var(--black);
+}
+
+.listingEntry td {
+    font-weight: bold;
+}
+
+.delete_listing {
+    color: white;
+    background-color: transparent;
+    font-weight: bold;
+}
+
+.galleryDiv {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: flex-start;
+}
+
+.preview {
+    width: 40%;
+    padding: 2em;
+}
+
+.preview img {
+    width: 100%;
+}
+
+/* Listing Page */
+.listing {
+    display: flex;
+    gap: 2%;
+    justify-content: center;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.listingLeft {
+    width: 45%;
+}
+
+.listingRight {
+    width: 45%;
+}
+
+.listingLeft img {
+    width: 100%;
+    border: 4px solid black;
+}
+
+.bidTitle {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+}
+
+.bidTitle button {
+    color: var(--black);
+    background-color: #2e67b8;
+    border-radius: 1em;
+    cursor: pointer;
+    width: 10em;
+    font-size: 1.5em;
+    font-weight: bold;
+}
+
+.newBid {
+    border: 2px solid black;
+    border-radius: 1.5em;
+    display: none;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    margin-top: 1em;
+    margin-bottom: 1em;
+    padding: 1em;
+    background-color: #2e67b8;
+}
+
+.newBid textarea {
+    width: 100%;
+    background-color: var(--black);
+}
+
+.newBid input {
+    background-color: var(--black);
+}
+
+#commentLabel {
+    width: 100%;
+}
+
+.description {
+    border: 2px solid black;
+    border-radius: 1.5em;
+    background-color: #2e67b8;
+}
+
+.bid {
+    border: 2px solid black;
+    border-radius: 1.5em;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    margin-top: 1em;
+    margin-bottom: 1em;
+    background-color: #2e67b8;
+}
+
+.bid p {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+}
+
+.bidder {
+    color: var(--black);
+    font-weight: bold;
+}
+
+.amount {
+    font-weight: bold;
+    color: var(--dark-blue)
+}
+
+/* New Listing Page */
+.newListing {
+    display: flex;
+    justify-content: center;
+}
+
+.newListing form {
+    width: 50%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.newListing form label {
+    color: var(--dark-blue);
+}
+
+.newListing form input {
+    color: var(--black);
+}
+
+.newListing form textarea {
+    color: var(--black);
+}
+
+.newListing form select {
+    color: var(--black);
+}
