@@ -58,7 +58,7 @@
                 <button id="placeBidButton">Place Bid</button>
             </div>
             <div class="bids">
-                <form class="newBid" action="/place_bid" method="POST">
+                <div class="newBid">
                     <div>
                         <label for="name">Your Name:</label>
                         <input type="text" id="name" name="name" required>
@@ -74,8 +74,8 @@
 
                     <input type="number" name="bidID" id="bidID" hidden>
 
-                    <input type="submit">
-                </form>
+                    <input type="submit" id="submitBidButton">
+                </div>
                 {bids}
             </div>
         </div>

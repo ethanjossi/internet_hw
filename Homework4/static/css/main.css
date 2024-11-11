@@ -191,6 +191,11 @@ thead {
     font-weight: bold;
 }
 
+.delete_listing {
+    color: white;
+    background-color: transparent;
+    font-weight: bold;
+}
 
 .galleryDiv {
     display: flex;

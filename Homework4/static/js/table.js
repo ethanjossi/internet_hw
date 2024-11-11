@@ -49,8 +49,55 @@ function setup_event_listeners() {
     });
 }
 
+async function remove_listing(event) {
+    const button = event.target;
+    const tr = button.parentElement.parentElement;
+    const id = tr.getAttribute("data-listing-id");
+    const json_data = `{
+        "listing_id": ${id}
+    }`;
+
+    // Update the auction entry start times so they continue to display right
+    auction_entries.splice(id, 1);
+
+    // Make the DELTE request
+    // Repeat until there is no delay sent back
+    let retry;
+    let response;
+    do {
+        response = await fetch('/api/delete_listing', {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: json_data
+        });
+
+        retry = response.status === 429;
+        if (retry) {
+            let wait_time = response.headers.get("Retry-After");
+            const delay = parseInt(wait_time);
+            await new Promise(resolve => setTimeout(resolve, delay));
+        }
+
+    } while (retry);
+
+    // If successful response, we can delete the listing in the table
+    if (response.status == 204) {
+        tr.remove();
+    }
+}
+
+function setup_delete_button_listeners() {
+    const del_buttons = document.querySelectorAll(".delete_listing");
+    del_buttons.forEach(button => {
+        button.addEventListener('click', remove_listing);
+    })
+}
+
 // Set up the event listeners for the preview
 setup_event_listeners();
+setup_delete_button_listeners();
 
 // Store all the times initially
 let auction_entries = []

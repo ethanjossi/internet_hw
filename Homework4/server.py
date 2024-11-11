@@ -1,6 +1,12 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
+import urllib  # Only for parse.unquote and parse.unquote_plus.
 import json
+import base64
+from typing import Union, Optional
+import re
 from datetime import datetime
+import time
+# If you need to add anything above here you should check with course staff first.
 
 # Load all the listings from the json file
 with open("static/json/listings.json", "r") as file:
@@ -9,13 +15,14 @@ with open("static/json/listings.json", "r") as file:
 # PUT YOUR GLOBAL VARIABLES AND HELPER FUNCTIONS HERE.
 LISTING_PAGE = "listing_page.html"
 TABLE_TEMPLATE = """
-<tr class="listingEntry" data-image="{imageURL}" data-description="{description}">
+<tr class="listingEntry" data-image="{imageURL}" data-description="{description}" data-listing-id="{listing_id}">
     <td>
         <a href="{URL}">{title}</a>
     </td>
     <td>{num_bids}</td>
     <td>${top_bid}</td>
     <td>{endDate}</td>
+    <td><button class="delete_listing">delete</button></td>
 </tr>"""
 BID_TEMPLATE = """
 <div class="bid">
@@ -42,19 +49,55 @@ filepaths = {
         "/main.css": "static/css/main.css",
         "/js/bid.js": "static/js/bid.js",
         "/js/new_listing.js": "static/js/new_listing.js",
-        "/js/table.js": "static/js/table.js"
+        "/js/table.js": "static/js/table.js",
+        "/create": "static/html/create.html",
+        "/api/place_bid": "",
+        "/api/delete_listing": ""
     }
 
+# Provided helper function. This function can help you implement rate limiting
+rate_limit_store = []
+
+
+def pass_api_rate_limit() -> tuple[bool, int | None]:
+    """This function will keep track of rate limiting for you.
+    Call it once per request, it will return how much delay would be needed.
+    If it returns 0 then process the request as normal
+    Otherwise if it returns a positive value, that's the number of seconds
+    that need to pass before the next request"""
+    from datetime import datetime, timedelta
+
+    global rate_limit_store
+    # you may find it useful to change these for testing, such as 1 request for 3 seconds.s
+    RATE_LIMIT = 4  # requests per second
+    RATE_LIMIT_WINDOW = 10  # seconds
+    # Refresh rate_limit_store to only "recent" times
+    rate_limit_store = [
+        time
+        for time in rate_limit_store
+        if datetime.now() - time <= timedelta(seconds=RATE_LIMIT_WINDOW)
+    ]
+    if len(rate_limit_store) >= RATE_LIMIT:
+        return (
+            RATE_LIMIT_WINDOW - (datetime.now() - rate_limit_store[0]).total_seconds()
+        )
+    else:
+        # Add current time to rate_limit_store
+        rate_limit_store.append(datetime.now())
+        return 0
+
+
 def escape_html(str):
+    # this i s a bare minimum for hack-prevention.
+    # You might want more.
     str = str.replace("&", "&amp;")
     str = str.replace('"', "&quot;")
-    str = str.replace("'", "&#39;")
     str = str.replace("<", "&lt;")
     str = str.replace(">", "&gt;")
-
+    str = str.replace("'", "&#39;")
     return str
 
-# Use this function only after splitting the paramters & anchor from the URL
+
 def unescape_url(url_str):
     import urllib.parse
 
@@ -64,23 +107,42 @@ def unescape_url(url_str):
 
 def parse_query_parameters(response) -> dict:
     if response is None:
-        return {"category": "all", "query": ""}
-    # If ? at beginning, remove it
-    if response.startswith("?"):
-        response = response[1:]
-    # Split the query string into key-value pairs
-    key_values = response.split("&")
-    # Initialize a dictionary to store parsed parameters
-    query_dict = {}
-    # Iterate over each key-value pair
-    # Split the pair by '=' to separate key and value
-    for pair in key_values:
-        key, value = pair.split("=")
-        key = unescape_url(key)
-        value = unescape_url(value)
-        query_dict[key] = value
-    return query_dict
+        return {}
+    pairs = response.split("&")
+    pairs2 = []
+    for pair in pairs:
+        if pair.count("=") == 1 and pair.split("=")[0] != "":
+            pairs2.append(pair)
+    pairs = pairs2
+    parsed_params = {}
 
+    for pair in pairs:
+        key = unescape_url(pair.split("=")[0])
+        value = unescape_url(pair.split("=")[1])
+        parsed_params[key] = value
+
+    return parsed_params
+
+def parse_body(body: str) -> tuple[dict, int]:
+    """
+    This method parses the body and checks that the body is not empty
+    if there is any error parsing the json or the body is empty, None
+    will be returned.
+    Parameters:
+        body: string - body of the request
+    Returns:
+        json object - the parsed json"""
+    if body == "" or body is None:
+        return None, 400
+    try:
+        json_data = json.loads(body)
+    except:
+        return None, 400
+    if not isinstance(json_data, dict):
+        return None, 400
+    return json_data, None
+
+    
 
 def render_listing(listing) -> str:
     title = listing["title"]
@@ -114,7 +176,7 @@ def render_gallery(query=None, category=None):
                 bid_amount = 0
             else:
                 bid_amount = get_max_bid(entry["id"])
-            table_entries += TABLE_TEMPLATE.format(imageURL=entry["imageURL"], description=entry["description"], URL=url, title=entry["title"], num_bids=len(entry["bids"]), top_bid=bid_amount, endDate=entry["endDate"])
+            table_entries += TABLE_TEMPLATE.format(imageURL=entry["imageURL"], description=entry["description"], listing_id=entry["id"], URL=url, title=entry["title"], num_bids=len(entry["bids"]), top_bid=bid_amount, endDate=entry["endDate"])
     # Format the table entries into the listings page
     if table_entries == "":
         table_entries = "<p>No listings found</p>"
@@ -156,23 +218,53 @@ def add_new_listing(queryParams: dict) -> bool:
     filepaths["/listing/{}".format(id)] = LISTING_PAGE
     return True
 
-def add_new_bid(queryParams: dict) -> bool:
-    # Check if all the entries are there
-    if ("name" not in queryParams) or ("amount" not in queryParams) or ("comment" not in queryParams) or ("bidID" not in queryParams):
-        return False
-    # Check that the bid is a number, the listing id exists and that it's larger than the current max bid
-    if (not queryParams.get("bidID").isdigit()):
-        return False
-    id = int(queryParams.get("bidID"))
-    if (get_listing(id) == None) or (int(queryParams.get("amount")) <= get_max_bid(id)):
-        return False
+def delete_listing(body: dict) -> int:
+    """
+    Deletes a listing. Returns an integer that represents
+    the status code of the deletion.
+    Parameters:
+        body: dictionary - a dict containing the listing id
+    Returns:
+        int: the status code of the deletion"""
+    # Check all keys required are present
+    required_keys = ["listing_id"]
+    if not all(key in body for key in required_keys):
+        return 400
+    # Check that the listing ID exists
+    if get_listing(body["listing_id"]) is None:
+        return 404
+    # Check the listing id is an int
+    if type(body["listing_id"]) is not int:
+        return 400
+    # Delete the listing, return 204
+    for idx, listing in enumerate(listings):
+        if listing.get("id") == body.get("listing_id"):
+            del listings[idx]
+    return 204
+
+
+def add_new_bid(queryParams: dict) -> tuple[int, str]:
+    # Check all required keys are present
+    required_keys = ["listing_id", "bidder_name", "bid_amount", "comment"]
+    if not all(key in queryParams for key in required_keys):
+        return 400, None
+    # Check that the values are the types they should be
+    if not (isinstance(queryParams["bidder_name"], str) and isinstance(queryParams["bid_amount"], int) and isinstance(queryParams["listing_id"], int)):
+        return 400, None
+    # Check that the listing ID exists
+    if get_listing(queryParams["listing_id"]) is None:
+        return 400, None
+    # Check that the bid is greater than the max bid
+    id = queryParams.get("listing_id")
+    if queryParams["bid_amount"] <= get_max_bid(id):
+        return 409, None
     # Add the bid to the listing
     bid = {}
-    bid["bidderName"] = queryParams.get("name")
-    bid["bidAmount"] = int(queryParams.get("amount"))
+    bid["bidderName"] = queryParams.get("bidder_name")
+    bid["bidAmount"] = int(queryParams.get("bid_amount"))
     bid["comment"] = queryParams.get("comment")
     get_listing(id).get("bids").insert(0, bid)
-    return True
+    return 201, bid["bidderName"]
 
 def get_max_bid(id: int) -> int:
     listing = get_listing(id)
@@ -234,155 +326,249 @@ def get_filepath(path: str) -> str:
     filepath = filepaths.get(path, "static/html/404.html")
     return filepath
 
-def server_GET(url: str) -> tuple[str | bytes, str, int]:
-    # This gets both the path, anchor, and query in a small amount of code
-    # Will still work even if query and anchor aren't in the url
+def check_headers(headers: dict) -> bool:
+    if "Content-Type" in headers and (headers.get("Content-Type") == "application/json" or headers.get("Content-Type") == "application/x-www-form-urlencoded"):
+        return True
+    return False
+
+# The method signature is a bit "hairy", but don't stress it -- just check the documentation below.
+# NOTE some people's computers don't like the type hints. If so replace below with simply: `def server(method, url, body, headers)`
+# The type hints are fully optional in python.
+def server(
+    request_method: str,
+    url: str,
+    request_body: Optional[str],
+    request_headers: dict[str, str],
+) -> tuple[Union[str, bytes], int, dict[str, str]]:
+    """
+    `method` will be the HTTP method used, for our server that's GET, POST, DELETE, and maybe PUT
+    `url` is the partial url, just like seen in previous assignments
+    `body` will either be the python special `None` (if the body wouldn't be sent (such as in a GET request))
+         or the body will be a string-parsed version of what data was sent.
+    headers will be a python dictionary containing all sent headers.
+
+    This function returns 3 things:
+    The response body (a string containing text, or binary data)
+    The response code (200 = ok, 404=not found, etc.)
+    A _dictionary_ of headers. This should always contain Content-Type as seen in the example below.
+    """
+    response_headers = {}
+
     path = url
     query = anchor = None
     if '#' in url:
-        path, anchor = url.split("#")
+        path, anchor = url.split("#", 1)
     if '?' in url:
-        path, query = path.split("?")
+        path, query = path.split("?", 1)
     # print(f"filepath: {path},  query: {query}, anchor: {anchor}")
 
     filepath = get_filepath(path)
-    send_data = mime = ""
+    mime = None
+    response_body = ""
+    content_type = "text/html"
     status_code = 200
-    # Individual Listing
-    if filepath == LISTING_PAGE:
-        number = path[9:]
-        send_data = render_listing(get_listing(int(number)))
-        mime = "text/html"
-    # Images
-    elif filepath.startswith("static/images/"):
-        print(f"requesting image {filepath}")
-        with open(filepath, "rb") as img:
-            send_data = img.read()
-        mime = "image/jpeg"
-    # CSS
-    elif filepath.startswith("static/css"):
-        with open(filepath) as file:
-            send_data = file.read()
-        mime = "text/css"
-    # Listing Page
-    elif filepath == "static/html/listings.html":
-        query_params = parse_query_parameters(query)
-        # Check that category and query exist, if not, add them. 
-        if "category" not in query_params or "query" not in query_params:
-            query_params["category"] = "all"
-            query_params["query"] = ""
-        # Set them to None if they are for any value
-        if query_params["category"] == "all":
-            query_params["category"] = None
-        if query_params["query"] == "":
-            query_params["query"] = None
-        send_data = render_gallery(query=query_params["query"], category=query_params["category"])
-        mime = "text/html"
-    # Javascript
-    elif filepath.startswith("static/js"):
-        with open(filepath) as file:
-            send_data = file.read()
-        mime = "text/javascript"
-    # All other pages
-    else:
-        with open(filepath) as file:
-            send_data = file.read()
-        mime = "text/html"
-    print(f"path: {path} filepath: {filepath}")
+
+    # Check valid METHOD
+    if request_method not in ["GET", "POST", "DELETE"]:
+        return "", 405, {"Content-Type": "text/html; charset=utf-8"}
+    # Return 404 if not valid path
     if filepath == "static/html/404.html":
-        status_code = 404
-    # ADD IN CHARSET
-    return send_data, mime, status_code
+        with open(filepath) as file:
+            response_body = file.read()
+        return response_body, 404, {"Content-Type": "text/html; charset=utf-8"}
+    # Check Rate limiting, immediately return 429
+    if path.startswith("/api/"):
+        wait_time = pass_api_rate_limit()
+        if wait_time != 0:
+            return "", 429, {"Content-Type": "text/html; charset=utf-8",
+                            "Retry-After": wait_time}
 
 
-def server_POST(url: str, body: str) -> tuple[str | bytes, str, int]:
-    path = url
-    query = anchor = None
-    if '#' in url:
-        path, anchor = url.split("#")
-    if '?' in url:
-        path, query = path.split("?")
-    print(f"filepath: {path},  query: {query}, anchor: {anchor}")
-    print(f"BODY: {body}")
-
-    send_data = mime = ""
-    status_code = 200
-
-    if path == "/create":
-        query_params = parse_query_parameters(body)
-        result = add_new_listing(query_params)
-        if result:
-            status_code = 201
-            with open("static/html/create_success.html") as file:
-                send_data = file.read()
+    if request_method == "GET":
+        query_params = parse_query_parameters(query)
+        # Single Listing
+        if filepath == LISTING_PAGE:
+            number = path[9:]
+            response_body = render_listing(get_listing(int(number)))
+            mime = "text/html"
+        # Images
+        elif filepath.startswith("static/images/"):
+            with open(filepath, "rb") as img:
+                response_body = img.read()
+            mime = "image/jpeg"
+        # CSS
+        elif filepath.startswith("static/css"):
+            with open(filepath) as file:
+                response_body = file.read()
+            mime = "text/css"
+        # Gallery Page
+        elif filepath == "static/html/listings.html":
+            # Check that category and query exist, if not, add them. 
+            if "category" not in query_params or "query" not in query_params:
+                query_params["category"] = "all"
+                query_params["query"] = ""
+            # Set them to None if they are for any value
+            if query_params["category"] == "all":
+                query_params["category"] = None
+            if query_params["query"] == "":
+                query_params["query"] = None
+            response_body = render_gallery(query=query_params["query"], category=query_params["category"])
+            mime = "text/html"
+        # Javascript
+        elif filepath.startswith("static/js"):
+            with open(filepath) as file:
+                response_body = file.read()
+            mime = "text/javascript"
+        # Default - All other pages
         else:
+            with open(filepath) as file:
+                response_body = file.read()
+            mime = "text/html"
+    elif request_method == "POST":
+        query_params = parse_query_parameters(request_body)
+        # Create Listing
+        if check_headers(request_headers) == False:
             status_code = 400
-            with open("static/html/create_fail.html") as file:
-                send_data = file.read()
-        mime = "text/html"
-    elif path == "/place_bid":
-        query_params = parse_query_parameters(body)
-        result = add_new_bid(query_params)
-        status_code = 201 if result else 400
-        send_data = render_listing(get_listing(int(query_params.get("bidID"))))
-        mime = "text/html"
-    
-    return send_data, mime, status_code
+        elif path == "/create":
+            if add_new_listing(query_params):
+                status_code = 303
+                response_headers["Location"] = "/listing/{}".format(listings[-1].get("id"))
+            else:
+                status_code = 400
+                with open("static/html/create_fail") as file:
+                    response_body = file.read()
+            mime = "text/html"
+        # Place Bid
+        elif path == "/api/place_bid":
+            json_data, status_code = parse_body(request_body)
+            if json_data is not None:
+                # Replace bidder name if cookie is present
+                if "Cookie" in request_headers:
+                    cookies = request_headers["Cookie"].split("=")
+                    if cookies[0] == "bidder_name" and len(cookies) == 2:
+                        json_data["bidder_name"] = cookies[1]
+                status_code, bidder_name = add_new_bid(json_data)
+                if status_code == 201 or status_code == 409:
+                    response_body = json.dumps(get_listing(json_data["listing_id"]).get("bids"))
+            # Set cookie if needed
+            if "Cookie" not in request_headers:
+                response_headers["Set-Cookie"] = "bidder_name={}; Path=/".format(bidder_name)
+            mime = "application/json"
+    elif request_method == "DELETE":
+        if check_headers(request_headers) == False:
+            status_code = 400
+        elif path == "/api/delete_listing":
+            json_data, status_code = parse_body(request_body)
+            if json_data is not None:
+                status_code = delete_listing(json_data)
+
+    content_type = "{mime}; charset=utf-8".format(mime=mime)
+    response_headers["Content-Type"] = content_type
+
+    print(f"\npath: {path}    filepath: {filepath}    method: {request_method}")
+    print(f"status code: {status_code}")
+    if request_body is not None:
+        print(f"JSON request: {request_body}")
+
+    return response_body, status_code, response_headers
 
 
 # You shouldn't need to change content below this. It would be best if you just left it alone.
+
+
 class RequestHandler(BaseHTTPRequestHandler):
-    def do_POST(self):
+    def c_read_body(self):
         # Read the content-length header sent by the BROWSER
         content_length = int(self.headers.get("Content-Length", 0))
         # read the data being uploaded by the BROWSER
         body = self.rfile.read(content_length)
         # we're making some assumptions here -- but decode to a string.
         body = str(body, encoding="utf-8")
+        return body
 
-        message, content_type, response_code = server_POST(self.path, body)
-
+    def c_send_response(self, message, response_code, headers):
         # Convert the return value into a byte string for network transmission
         if type(message) == str:
             message = bytes(message, "utf8")
 
-        # prepare the response object with minimal viable headers.
+        # Send the first line of response.
         self.protocol_version = "HTTP/1.1"
-        # Send response code
         self.send_response(response_code)
-        # Send headers
-        # Note -- this would be binary length, not string length
+
+        # Send headers (plus a few we'll handle for you)
+        for key, value in headers.items():
+            self.send_header(key, value)
         self.send_header("Content-Length", len(message))
-        self.send_header("Content-Type", content_type)
         self.send_header("X-Content-Type-Options", "nosniff")
         self.end_headers()
 
         # Send the file.
         self.wfile.write(message)
-        return
+
+    def do_POST(self):
+        # Step 1: read the last bit of the request
+        try:
+            body = self.c_read_body()
+        except Exception as error:
+            # Can't read it -- that's the client's fault 400
+            self.c_send_response(
+                "Couldn't read body as text", 400, {"Content-Type": "text/plain"}
+            )
+            raise
+
+        try:
+            # Step 2: handle it.
+            message, response_code, headers = server(
+                "POST", self.path, body, self.headers
+            )
+            # Step 3: send the response
+            self.c_send_response(message, response_code, headers)
+        except Exception as error:
+            # If your code crashes -- that's our fault 500
+            self.c_send_response(
+                "The server function crashed.", 500, {"Content-Type": "text/plain"}
+            )
+            raise
 
     def do_GET(self):
-        # Call the student-edited server code.
-        message, content_type, response_code = server_GET(self.path)
+        try:
+            # Step 1: handle it.
+            message, response_code, headers = server(
+                "GET", self.path, None, self.headers
+            )
+            # Step 3: send the response
+            self.c_send_response(message, response_code, headers)
+        except Exception as error:
+            # If your code crashes -- that's our fault 500
+            self.c_send_response(
+                "The server function crashed.", 500, {"Content-Type": "text/plain"}
+            )
+            raise
 
-        # Convert the return value into a byte string for network transmission
-        if type(message) == str:
-            message = bytes(message, "utf8")
+    def do_DELETE(self):
+        # Step 1: read the last bit of the request
+        try:
+            body = self.c_read_body()
+        except Exception as error:
+            # Can't read it -- that's the client's fault 400
+            self.c_send_response(
+                "Couldn't read body as text", 400, {"Content-Type": "text/plain"}
+            )
+            raise
 
-        # prepare the response object with minimal viable headers.
-        self.protocol_version = "HTTP/1.1"
-        # Send response code
-        self.send_response(response_code)
-        # Send headers
-        # Note -- this would be binary length, not string length
-        self.send_header("Content-Length", len(message))
-        self.send_header("Content-Type", content_type)
-        self.send_header("X-Content-Type-Options", "nosniff")
-        self.end_headers()
-
-        # Send the file.
-        self.wfile.write(message)
-        return
+        try:
+            # Step 2: handle it.
+            message, response_code, headers = server(
+                "DELETE", self.path, body, self.headers
+            )
+            # Step 3: send the response
+            self.c_send_response(message, response_code, headers)
+        except Exception as error:
+            # If your code crashes -- that's our fault 500
+            self.c_send_response(
+                "The server function crashed.", 500, {"Content-Type": "text/plain"}
+            )
+            raise
 
 
 def run():
