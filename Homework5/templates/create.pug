@@ -1,0 +1,39 @@
+doctype html 
+html 
+    head 
+        meta(charset="UTF-8")
+        title Create Listing
+        link(rel="stylesheet", href="/css/main.css", type="text/css")
+
+    body 
+        header 
+            include nav.pug 
+
+        main 
+            h1 Add a Listing
+            .newListing
+                form(action='/create' method='POST')
+                    label(for='title') Title:
+                    input#title(type='text' name='title' required='')
+
+                    label(for='imageURL') Image URL:
+                    input#imageURL(type='url' name='url' required='')
+
+                    label(for='description') Description:
+                    textarea#description(name='description' required='')
+
+                    label(for='newCategory') Category:
+                    select#newCategory(name='category')
+                        option(value='all') All categories
+                        option(value='cheap') Cheap
+                        option(value='average') Average
+                        option(value='expensive') Expensive
+                        option(value='other') Other
+
+                    label#otherCategoryLabel(for='otherCategoryText' hidden='') Please name the new category:
+                    input#otherCategoryText(type='text' name='otherCategory' hidden='')
+
+                    label(for='saleDate') Sale Date:
+                    input(type='date' name='saleDate' required='')
+
+                    input(type='submit')

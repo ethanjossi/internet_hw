@@ -1,9 +1,9 @@
-nav 
-    ul(class="menu")
+nav.navbar 
+    ul.menu
         li: a(href="/") Main Page 
         li: a(href="/gallery") Listings 
         li: a(href="/create") Add Listing 
-    div(class="search")
+    div.search
         form(action="/gallery/search", method="GET")
             input#query(type="text", name="query", placeholder="Search for listings")
             select#category(name="category")
@@ -11,4 +11,4 @@ nav
                 option(value="cheap") Cheap
                 option(value="average") Average 
                 option(value="expensive") Expensive
-            input(type="submit", value="Search", class="searchButton")
+            input.searchButton(type="submit", value="Search")

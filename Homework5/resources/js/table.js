@@ -65,7 +65,7 @@ async function remove_listing(event) {
     let retry;
     let response;
     do {
-        response = await fetch('/api/delete_listing', {
+        response = await fetch('/api/deleteListing', {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
@@ -89,7 +89,7 @@ async function remove_listing(event) {
 }
 
 function setup_delete_button_listeners() {
-    const del_buttons = document.querySelectorAll(".delete_listing");
+    const del_buttons = document.querySelectorAll(".deleteListing");
     del_buttons.forEach(button => {
         button.addEventListener('click', remove_listing);
     })

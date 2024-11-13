@@ -1,0 +1,50 @@
+doctype html 
+html 
+    head 
+        meta(charset="UTF-8")
+        title View Listing
+        link(rel="stylesheet", href="/css/main.css", type="text/css")
+        //- script(src="/js/bid.js" defer="")
+
+    body 
+        header 
+            include nav.pug 
+
+        main 
+            h1 #{listing.title}
+            p#listingID(hidden='') #{listing.id}
+            .listing
+                .listingLeft
+                    img(src=listing.imageURL alt='An image for an auction item' width='400')
+                    .description
+                        p Description: #{listing.description}
+                        p Category: #{listing.category}
+                        p#endDate Bid ends: #{listing.endDate}
+                // Bids section
+                .listingRight
+                    .bidTitle
+                        h2 Bids
+                        button#placeBidButton Place Bid
+                    .bids
+                        .newBid
+                            div
+                                label(for='name') Your Name:
+                                input#name(type='text' name='name' required='')
+
+                            div
+                                label(for='amount') Amount:
+                                input#amount(type='number' name='amount' step='0.01' required='')
+
+                            label#commentLabel(for='comment') Comment:
+                            textarea#comment(name='comment')
+
+                            input#bidID(type='number' name='bidID' hidden='')
+
+                            input#submitBidButton(type='submit')
+                        each bid in listing.bids
+                            .bid 
+                                p 
+                                    span.bidder  #{bid.bidderName}: 
+                                    span.amount $#{bid.bidAmount}
+                                p Comments:  #{bid.comment}
+                        

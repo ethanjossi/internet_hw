@@ -1,0 +1,36 @@
+doctype html 
+html 
+    head 
+        meta(charset="UTF-8")
+        title Listings
+        link(rel="stylesheet", href="/css/main.css", type="text/css")
+        script(src="/js/table.js" defer="")
+    
+    body 
+        header 
+            include nav.pug 
+        
+        main 
+            h1 Gallery
+            .galleryDiv
+                .gallery
+                    table
+                        thead
+                            tr
+                                th Listing
+                                th Number of Bids
+                                th Top Bid
+                                th Auction Ends
+                                th
+                            tbody
+                                each listing in listings 
+                                    tr.listingEntry(data-image=listing.imageURL, data-description=listing.description, data-listing-id=listing.id)
+                                        td: a(href=`/listing/${listing.id}`) #{listing.title}
+                                        td #{listing.numBids}
+                                        td $#{listing.topBid}
+                                        td #{listing.endDate}
+                                        td 
+                                            button.deleteListing delete
+                .preview
+                    img#imageURL(alt='preview image' hidden='')
+                    p#description(hidden='')
