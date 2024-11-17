@@ -23,9 +23,9 @@ submitBidButton.addEventListener("click", submit_bid);
 async function submit_bid() {
     // get all the data and parse it into a json object
     const json_data = `{
-                    "listing_id": ${bidID},
-                    "bidder_name": "${document.getElementById("name").value}",
-                    "bid_amount": ${document.getElementById("amount").value},
+                    "listingId": ${bidID},
+                    "bidderName": "${document.getElementById("name").value}",
+                    "bidAmount": ${document.getElementById("amount").value},
                     "comment": "${document.getElementById("comment").value}"}`;
     // send the json object
     // Repeatedly send until the request is processed

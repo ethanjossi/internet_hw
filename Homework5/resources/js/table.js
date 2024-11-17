@@ -54,7 +54,7 @@ async function remove_listing(event) {
     const tr = button.parentElement.parentElement;
     const id = tr.getAttribute("data-listing-id");
     const json_data = `{
-        "listing_id": ${id}
+        "listingId": ${id}
     }`;
 
     // Update the auction entry start times so they continue to display right
@@ -65,7 +65,7 @@ async function remove_listing(event) {
     let retry;
     let response;
     do {
-        response = await fetch('/api/deleteListing', {
+        response = await fetch('/api/delete_listing', {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
