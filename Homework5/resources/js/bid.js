@@ -54,7 +54,7 @@ async function submit_bid() {
     if (response.status == 201) {
         bidDiv.style.display = 'none';
         placeBidButton.textContent = 'Place Bid';
-        document.getElementById("name").value = document.cookie.split('=')[1];
+        document.getElementById("name").value = getCookie("name");
         document.getElementById("amount").value = "";
         document.getElementById("comment").value = "";
         document.getElementById("amount").style.border = "";
@@ -82,6 +82,19 @@ function format_bids(json_bids) {
     });
 }
 
+function getCookie(cookieName) {
+    const cookies = document.cookie.split(";");
+    let key;
+    let value;
+    for (let cookie of cookies) {
+        [key, value] = cookie.split("=");
+        key = key.trim();
+        if (key === cookieName) {
+            return value;
+        }
+    }
+    return null;
+}
 
 // Put the listing id into the form
 const bidIDelem = document.getElementById('bidID');

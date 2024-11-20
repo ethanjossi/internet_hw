@@ -1,7 +1,9 @@
 const express = require('express');
 const app = express();
+const cookieParser = require("cookie-parser");
 
 // Middleware
+app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({extended: false}));
 app.use('/css', express.static('resources/css'));
@@ -10,25 +12,85 @@ app.use('/js', express.static("resources/js"));
 app.set('views', 'templates');
 app.set('view engine', 'pug');
 
+app.use((req, res, next) => {
+    const send_log = res.send;
+    res.send = function (body) {
+        console.log(`${req.method} ${req.url} - Status: ${res.statusCode} - Listings Count: ${listings.length}`);
+        // Now we continue on with the original send
+        send_log.apply(this, arguments);
+    }
+    next();
+});
+
+app.use((req, res, next) => {
+    if (req.url.startsWith("/api")) {
+        const wait = checkRateLimit();
+        if (wait.passed) {
+            next();
+        } else {
+        const wait_time = wait.retryAfter;
+        res.status(429);
+        res.set("Retry-After", wait_time);
+        res.send();
+        }
+    }
+    next();
+})
+
 // CONSTANTS
 const port = 4131;
 let listings = require("./resources/json/listings.json");
 let id_counter = 4;
 
+// Rate limiting setup
+let rateLimitStore = [];
+const RATE_LIMIT = 3; // requests per second
+const RATE_LIMIT_WINDOW = 10; // seconds
+
+const checkRateLimit = () => {
+    const now = new Date();
+    rateLimitStore = rateLimitStore.filter(time =>
+    (now - time) <= RATE_LIMIT_WINDOW * 1000
+    );
+
+    if (rateLimitStore.length >= RATE_LIMIT) {
+    const oldestRequest = rateLimitStore[0];
+    const retryAfter = RATE_LIMIT_WINDOW - ((now - oldestRequest) / 1000);
+    return { passed: false, retryAfter };
+    }
+
+    rateLimitStore.push(now);
+    return { passed: true };
+};
+
 // GET REQUESTS
 app.get(["/", "/main"], (req, res) => {
-    res.render("main.pug");
+    res.render("mainpage.pug");
 });
 
 app.get(["/gallery", "/listings"], (req, res) => {
-    res.render("listings.pug", {listings});
+    res.render("gallery.pug", {listings});
+});
+
+app.get(["/gallery/search", "/listings/search"], (req, res) => {
+    const name = req.query.query ?? "";
+    const category = req.query.category ?? "all";
+    let found_listings = listings.filter(item => 
+        item.title.toLowerCase().includes(name.toLowerCase())
+    );
+    if (category !== "all") {
+        found_listings = found_listings.filter(item =>
+            item.category === category
+        );
+    }
+    res.render("gallery.pug", {listings: found_listings});
 });
 
 app.get("/listing/:id", (req, res) => {
     const id = parseInt(req.params.id);
     const listing = listings.find(item => item.id == id);
     if (listing) {
-        res.render("viewListing.pug", {listing});
+        res.render("listing.pug", {listing});
     } else {
         res.status(404).render("404.pug", {message: "Listing not found"});
     }
@@ -71,6 +133,7 @@ app.post("/api/place_bid", (req, res) => {
     res.status(status);
     if (status === 201) {
         const listing = add_bid(req.body);
+        res.cookie("name", req.body.bidderName);
         res.json(listing.bids);
     } else if (status == 409) {
         const listing = get_listing(req.body.listingId)
@@ -199,6 +262,12 @@ function check_new_listing(listing) {
     const day = parseInt(saleDate.substring(8, 10));
     if (!(0 < year && 1 <= month && month <= 12 && 1 <= day && day <= 31)) {
         console.log("Bad POST /create request - sale date not valid");
+        return false;
+    }
+    const today = new Date();
+    const sellDate = new Date(saleDate);
+    if (sellDate <= today) {
+        console.log("Bad POST /create request - sale date is not later than the current date.");
         return false;
     }
     // Check that otherCategory is correct
